@@ -3,10 +3,11 @@ import tkinter
 import numpy as np
 from tkinter import *
 from tkinter import ttk
-from PIL import ImageTk, Image
 from scipy.ndimage import gaussian_filter
 from PIL import Image, ImageTk
 
+
+# Display the image to a new window
 def displayPhoto(mapArray, root):
     # Original logic to get image data
     length, height = len(mapArray[0]), len(mapArray)
@@ -26,18 +27,19 @@ def displayPhoto(mapArray, root):
     root.title("Map Generator")
     root.mainloop()
 
-
+# Apply a gaussian filter to the map
 def applyGaussianFilter(mapArray, gaussSigma):
     mapArray = gaussian_filter(mapArray, sigma=gaussSigma, mode='reflect')
     return mapArray
 
-
+# Generate a random value based on the given chance
 def generate_random_values(chance):
-    chance = chance / 10  # 70% chance of getting 1 for variable 1
+    chance = chance / 10  # Convert to percentage from user entered whole number
     value1 = 255 if random.random() < chance else 0
     return value1
 
 
+# Assemble the map
 def createMap(length, height, chance):
     from random import randint
     mapArray = [[0 for _ in range(height)] for _ in range(length)]
@@ -47,6 +49,7 @@ def createMap(length, height, chance):
     return mapArray
 
 
+# Compile the map and apply conditional filters
 def compileMap(length, height, chance, gaussianBlur, gaussSigma):
     # Create the inital map
     mapArray = createMap(length, height, chance)
@@ -56,7 +59,7 @@ def compileMap(length, height, chance, gaussianBlur, gaussSigma):
     root = Tk()
     displayPhoto(mapArray, root)
 
-
+# Display the UI gather needed entries
 def displayUI():
     win = Tk()
     win.geometry("300x450")
@@ -64,15 +67,25 @@ def displayUI():
 
     gaussianBlur = BooleanVar()
     gaussianBlur.set(False)
+    gauss_sigma = 3
 
     def getData():
+        # Initialize values from entry field
+        global gauss_sigma  # Declare gauss_sigma as global
         length_entry = getLength.get()
         height_entry = getHeight.get()
         chance_entry = getChance.get()
-        gauss_sigma = float(gaussSigma.get())
         gauss_blur = gaussianBlur.get()
 
         print("Gaussian Blur checkbox state:", gaussianBlur.get())
+        if gauss_blur:
+            gauss_sigma_entry = gaussSigma.get()
+            if gauss_sigma_entry:
+                gauss_sigma = int(gauss_sigma_entry)
+            else:
+                gauss_sigma = 3
+        else:
+            gauss_sigma = 3  # Default value if Gaussian blur checkbox is unchecked
 
         # Validate input values
         if not length_entry or not height_entry or not chance_entry:
@@ -80,14 +93,10 @@ def displayUI():
             print("Please provide values for Length, Height, and Chance.")
             return
 
+        # Sanitize fields to desired types
         length = int(length_entry)
         height = int(height_entry)
         chance = float(chance_entry)
-
-        if not gauss_sigma and gauss_sigma != '':
-            # Display error message or provide a default value
-            gauss_sigma = 3  # Example: Set default sigma to 3
-            print("Empty sigma value. Using default sigma:", gauss_sigma)
 
         # Destroy the original window
         win.destroy()
@@ -97,9 +106,10 @@ def displayUI():
     space_label = Label(win, text="", font=("Monospace", 2))
     space_label.pack()
     # Gaussian blur checkbox
-    gaussBlur = tkinter.Checkbutton(win, text='Gaussian Blur', variable=gaussianBlur, onvalue=1, offvalue=0, command=getData)
+    gaussBlur = tkinter.Checkbutton(win, text='Gaussian Blur', variable=gaussianBlur, onvalue=1, offvalue=0, command="")
     gaussBlur.pack()
 
+    # Sigma value entry field
     label = Label(win, text="Sigma", font=("Monospace", 9))
     label.pack()
     gaussSigma = Entry(win, width=10)
@@ -143,7 +153,6 @@ def displayUI():
 
     # Call to loop
     win.mainloop()
-
 
 if __name__ == '__main__':
     displayUI()
