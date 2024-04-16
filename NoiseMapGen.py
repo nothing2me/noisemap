@@ -39,7 +39,7 @@ def displayUI():
     win = Tk()
     win.geometry("300x220")
     win.title("Map Generator")
-    def get_input():
+    def getData():
         length = int(getLength.get())
         height = int(getHeight.get())
         chance = float(getChance.get())
@@ -81,7 +81,7 @@ def displayUI():
     getChance.pack()
 
     # Display button to enter in values from entry
-    ttk.Button(win, text="Enter", width=20, command=get_input).pack(pady=20)
+    ttk.Button(win, text="Enter", width=20, command=getData).pack(pady=20)
 
     # Call to loop
     win.mainloop()
