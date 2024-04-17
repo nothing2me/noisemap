@@ -9,21 +9,48 @@ from PIL import Image, ImageTk
 
 # Display the image to a new window
 def displayPhoto(mapArray, root):
-    # Original logic to get image data
+    def update_image():
+        lockres = unlockres_var.get()
+        if lockres:
+            # Resize image to original size
+            resized_img = img.resize((length, height), Image.BICUBIC)  # Resize with bicubic interpolation
+            root.geometry(f"{length}x{height}")  # Resize the window to match image size
+        else:
+            # Resize image
+            resized_img = img.resize((800, 800), Image.BICUBIC)  # Resize with bicubic interpolation
+            root.geometry("800x800")  # Set window size to default
+
+        # Convert to PhotoImage format
+        global resized_img_tk
+        resized_img_tk = ImageTk.PhotoImage(resized_img)
+
+        # Update canvas with new image
+        canvas.delete("all")
+        canvas.create_image(0, 0, anchor=NW, image=resized_img_tk)
+
+
+    # Get image data
     length, height = len(mapArray[0]), len(mapArray)
     image_data = np.array(mapArray, dtype=np.uint8)
     img = Image.fromarray(image_data)
 
-    # Resize image to 800x800 using resize() method
+    # Create checkbox
+    unlockres_var = IntVar(value=0)
+    unlockres = Checkbutton(root, text='Unlock Size', variable=unlockres_var, onvalue=1, offvalue=0, command=update_image, pady=5)
+    unlockres.pack(anchor=W)
+
+    # Resize image
     resized_img = img.resize((800, 800), Image.BICUBIC)  # Resize with bicubic interpolation
 
     # Convert to PhotoImage format
-    resized_img = ImageTk.PhotoImage(resized_img)
+    global resized_img_tk
+    resized_img_tk = ImageTk.PhotoImage(resized_img)
 
     # Create canvas and display image
     canvas = Canvas(root, width=800, height=800)  # Set canvas size to 800x800
     canvas.pack()
-    canvas.create_image(0, 0, anchor=NW, image=resized_img)
+    canvas.create_image(0, 0, anchor=NW, image=resized_img_tk)
+
     root.title("Map Generator")
     root.mainloop()
 
@@ -62,7 +89,7 @@ def compileMap(length, height, chance, gaussianBlur, gaussSigma):
 # Display the UI gather needed entries
 def displayUI():
     win = Tk()
-    win.geometry("300x450")
+    win.geometry("200x350")
     win.title("Map Generator")
 
     gaussianBlur = BooleanVar()
@@ -90,7 +117,7 @@ def displayUI():
         # Validate input values
         if not length_entry or not height_entry or not chance_entry:
             # Display error message or provide a default value
-            print("Please provide values for Length, Height, and Chance.")
+            print("Provide values for Length, Height, and Chance.")
             return
 
         # Sanitize fields to desired types
@@ -103,54 +130,47 @@ def displayUI():
         # Call main to compile map with input values
         compileMap(height, length, chance, gauss_blur, gauss_sigma)
 
-    space_label = Label(win, text="", font=("Monospace", 2))
-    space_label.pack()
-    # Gaussian blur checkbox
-    gaussBlur = tkinter.Checkbutton(win, text='Gaussian Blur', variable=gaussianBlur, onvalue=1, offvalue=0, command="")
-    gaussBlur.pack()
+    # Create a frame
+    settings_frame = Frame(win)
+    settings_frame.pack()
 
-    # Sigma value entry field
-    label = Label(win, text="Sigma", font=("Monospace", 9))
-    label.pack()
-    gaussSigma = Entry(win, width=10)
+    # Gaussian blur checkbox and sigma on top
+    gaussBlur = Checkbutton(settings_frame, text='Gaussian Blur', variable=gaussianBlur, onvalue=1, offvalue=0, command=getData, pady=5)
+    gaussBlur.pack(anchor=W)
+
+    label = Label(settings_frame, text="Sigma", font=("Monospace", 9))
+    label.pack(anchor=W)
+    gaussSigma = Entry(settings_frame, width=10)
     gaussSigma.focus_set()
-    gaussSigma.pack()
+    gaussSigma.pack(anchor=W)
 
-    # Create spacing
-    space_label = Label(win, text="", font=("Monospace", 2))
-    space_label.pack()
+    # Additional options within the frame
+    length_frame = Frame(settings_frame)
+    length_frame.pack(pady=10)
 
-    # Display entry label for length
-    label = Label(win, text="Enter Length:", font=("Monospace", 12))
-    label.pack()
-    getLength = Entry(win, width=40)
-    getLength.focus_set()
-    getLength.pack()
+    label = Label(length_frame, text="Enter Length:", font=("Monospace", 12))
+    label.pack(anchor=W)
+    getLength = Entry(length_frame, width=20)
+    getLength.pack(anchor=W)
 
-    # Create spacing
-    space_label.pack()
+    height_frame = Frame(settings_frame)
+    height_frame.pack(pady=10)
 
-    label = Label(win, text="Enter Height:", font=("Monospace", 12))
-    label.pack()
+    label = Label(height_frame, text="Enter Height:", font=("Monospace", 12))
+    label.pack(anchor=W)
+    getHeight = Entry(height_frame, width=20)
+    getHeight.pack(anchor=W)
 
-    # Display entry label for height
-    getHeight = Entry(win, width=40)
-    getHeight.focus_set()
-    getHeight.pack()
+    chance_frame = Frame(settings_frame)
+    chance_frame.pack(pady=10)
 
-    space_label.pack()
+    label = Label(chance_frame, text="Enter Chance:", font=("Monospace", 12))
+    label.pack(anchor=W)
+    getChance = Entry(chance_frame, width=20)
+    getChance.pack(anchor=W)
 
-    label = Label(win, text="Enter Chance:", font=("Monospace", 12))
-    label.pack()
-
-    # Display entry label for height
-    getChance = Entry(win, width=40)
-    getChance.focus_set()
-    getChance.pack()
-
-    # Display button to enter in values from entry
+    # Enter button outside the frame
     ttk.Button(win, text="Enter", width=20, command=getData).pack(pady=20)
-
     # Call to loop
     win.mainloop()
 
